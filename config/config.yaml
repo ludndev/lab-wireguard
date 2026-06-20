@@ -13,8 +13,8 @@ core:
   restore_state: false
 
 web:
-  listening_address: :${WG_WEB_PORT}
-  external_url: http://${WG_WEB_HOST}:${WG_WEB_PORT}
+  listening_address: ":${WG_WEB_PORT}"
+  external_url: "http://${WG_WEB_HOST}:${WG_WEB_PORT}"
   request_logging: true
 
 advanced:
