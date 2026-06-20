@@ -5,6 +5,7 @@ edition = "2021"
 description = "Rust client for the WireGuard Portal v2 REST API"
 authors = ["Judicaël AHYI (ludndev) <ludndev@gmail.com>"]
 license = "MIT"
+license-file = "LICENSE"
 keywords = ["wireguard", "wg-portal", "vpn", "api-client"]
 repository = "https://github.com/anomalyco/wireguard"
 
