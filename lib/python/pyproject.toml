@@ -36,6 +36,9 @@ Issues = "https://github.com/ludndev/lab-wireguard/issues"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
 [tool.mypy]
 strict = true
 python_version = "3.10"
