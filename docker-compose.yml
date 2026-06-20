@@ -38,7 +38,7 @@ services:
       - ./data:/app/data            # sqlite db + state
       - ./wg-configs:/etc/wireguard # optional wg-quick exports
     networks:
-      - ${WG_NETWORK}
+      - wgnet
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8888/"]
       interval: 5s
@@ -70,7 +70,7 @@ services:
     volumes:
       - ./test:/test:ro
     networks:
-      - ${WG_NETWORK}
+      - wgnet
     command:
       - /bin/sh
       - -c
@@ -79,5 +79,5 @@ services:
         exec /bin/sh /test/run-test.sh
 
 networks:
-  ${WG_NETWORK}:
+  wgnet:
     driver: bridge
