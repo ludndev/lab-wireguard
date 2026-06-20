@@ -41,7 +41,8 @@ up: env-check ## Start the WireGuard stack (portal only, no test)
 	@echo "$(GREEN)Starting wg-portal...$(RESET)"
 	docker compose up -d
 
-up-test: env-check ## Run the full stack with automated end-to-end test
+up-test: env-check ## Run the full stack with automated end-to-end test (always starts clean)
+	docker compose down --remove-orphans
 	@echo "$(GREEN)Starting wg-portal with test profile...$(RESET)"
 	docker compose --profile test up --abort-on-container-exit --exit-code-from $(WG_TEST_CONTAINER)
 
