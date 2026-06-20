@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 /// A configuration option that can be overridden by peers.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub struct ConfigOption<T> {
     pub value: T,
@@ -10,7 +10,7 @@ pub struct ConfigOption<T> {
 
 // ── Interfaces ───────────────────────────────────────────────────────────────
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub struct WgInterface {
     pub identifier: String,
@@ -83,7 +83,7 @@ pub struct WgInterface {
 
 // ── Peers ────────────────────────────────────────────────────────────────────
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub struct WgPeer {
     pub identifier: String,
@@ -145,7 +145,7 @@ pub struct WgPeer {
 
 // ── Users ────────────────────────────────────────────────────────────────────
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub struct WgUser {
     pub identifier: String,
@@ -185,7 +185,7 @@ pub struct WgUser {
 
 // ── Provisioning ─────────────────────────────────────────────────────────────
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub struct ProvisioningRequest {
     pub interface_identifier: String,
@@ -199,7 +199,7 @@ pub struct ProvisioningRequest {
     pub user_identifier: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub struct UserInformationPeer {
     pub identifier: String,
@@ -213,7 +213,7 @@ pub struct UserInformationPeer {
     pub is_disabled: Option<bool>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub struct UserInformation {
     pub user_identifier: String,
@@ -223,7 +223,7 @@ pub struct UserInformation {
 
 // ── Metrics ──────────────────────────────────────────────────────────────────
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub struct InterfaceMetrics {
     pub interface_identifier: String,
@@ -231,7 +231,7 @@ pub struct InterfaceMetrics {
     pub bytes_transmitted: i64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub struct PeerMetrics {
     pub peer_identifier: String,
@@ -251,7 +251,7 @@ pub struct PeerMetrics {
     pub is_pingable: Option<bool>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub struct UserMetrics {
     pub user_identifier: String,
@@ -263,7 +263,7 @@ pub struct UserMetrics {
 
 // ── API error ────────────────────────────────────────────────────────────────
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub(crate) struct ApiError {
     pub code: i32,
