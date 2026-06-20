@@ -1,0 +1,26 @@
+# Environment and configuration
+.env
+.env.local
+.env.*.local
+
+# Data and state
+/data/
+/wg-configs/
+
+# Docker logs
+docker-compose.log
+
+# OS
+.DS_Store
+.AppleDouble
+.LSOverride
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/

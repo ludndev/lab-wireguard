@@ -1,0 +1,83 @@
+---
+# WireGuard + wg-portal (h44z/wg-portal v2) with an automated end-to-end VPN test.
+#
+#   Normal run (portal only):     docker compose up -d
+#   Automated test (portal+test): docker compose --profile test up \
+#                                     --abort-on-container-exit --exit-code-from wg-test
+#
+# The "wg-test" container provisions a peer through the wg-portal REST API,
+# establishes a real WireGuard tunnel and pings the server over it.
+# It only runs when the "test" profile is enabled.
+
+# Credentials are loaded from .env and injected both into wg-portal (the config
+# file uses ${...} substitution) and into the test container (for API auth).
+x-wg-credentials: &wg-credentials
+  WG_ADMIN_USER: ${WG_ADMIN_USER}
+  WG_ADMIN_PASSWORD: ${WG_ADMIN_PASSWORD}
+  WG_API_TOKEN: ${WG_API_TOKEN}
+
+services:
+  wg-portal:
+    image: wgportal/wg-portal:v2
+    container_name: ${WG_PORTAL_CONTAINER}
+    restart: unless-stopped
+    environment:
+      <<: *wg-credentials
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      # required so WireGuard manages its own fwmark correctly inside a container
+      - net.ipv4.conf.all.src_valid_mark=1
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - "${WG_WEB_HOST}:${WG_WEB_PORT}:8888/tcp"      # web UI
+      - "${WG_VPN_PORT}:51820/udp"    # WireGuard interface (must match ListenPort below)
+    volumes:
+      - ./config:/app/config        # config.yaml lives here
+      - ./data:/app/data            # sqlite db + state
+      - ./wg-configs:/etc/wireguard # optional wg-quick exports
+    networks:
+      - ${WG_NETWORK}
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8888/"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  wg-test:
+    image: alpine:3.20
+    container_name: ${WG_TEST_CONTAINER}
+    profiles: ["test"]          # only started with: --profile test
+    restart: "no"
+    depends_on:
+      - wg-portal
+    environment:
+      <<: *wg-credentials
+      WG_PORTAL_URL: "http://${WG_PORTAL_CONTAINER}:8888"
+      WG_ENDPOINT: ${WG_TEST_ENDPOINT}
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    volumes:
+      - ./test:/test:ro
+    networks:
+      - ${WG_NETWORK}
+    command:
+      - /bin/sh
+      - -c
+      - |
+        apk add --no-cache wireguard-tools iproute2 curl jq bash >/dev/null 2>&1
+        exec /bin/sh /test/run-test.sh
+
+networks:
+  ${WG_NETWORK}:
+    driver: bridge

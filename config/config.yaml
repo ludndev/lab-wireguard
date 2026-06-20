@@ -1,0 +1,33 @@
+# wg-portal v2 configuration.
+# Full reference: https://wgportal.org/latest/documentation/configuration/overview/
+# ${VAR} placeholders are substituted from the container environment at startup.
+
+core:
+  admin_user: ${WG_ADMIN_USER}
+  admin_password: ${WG_ADMIN_PASSWORD}
+  # Setting an API token enables the REST API for the admin user.
+  # API auth is HTTP Basic: username = admin_user, password = this token.
+  admin_api_token: ${WG_API_TOKEN}
+  # Nothing to import on a fresh stack; keeps startup deterministic for the test.
+  import_existing: false
+  restore_state: false
+
+web:
+  listening_address: :${WG_WEB_PORT}
+  external_url: http://${WG_WEB_HOST}:${WG_WEB_PORT}
+  request_logging: true
+
+advanced:
+  log_level: info
+  # Defaults used by /interface/prepare when generating a fresh interface.
+  start_listen_port: 51820
+  start_cidr_v4: 10.11.12.0/24
+  use_ip_v6: false
+
+database:
+  type: sqlite
+  dsn: data/sqlite.db
+
+auth:
+  # Default minimum is 16; the admin password above satisfies it.
+  min_password_length: 16
