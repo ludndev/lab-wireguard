@@ -13,13 +13,11 @@ core:
   restore_state: false
 
 web:
+  # WG_WEB_HOST is the bind address (0.0.0.0 to listen on all interfaces).
+  # WG_EXTERNAL_HOST is the public hostname/IP used in URLs (e.g. server IP or domain).
   listening_address: ":${WG_WEB_PORT}"
-  external_url: "http://${WG_WEB_HOST}:${WG_WEB_PORT}"
+  external_url: "http://${WG_EXTERNAL_HOST}:${WG_WEB_PORT}"
   request_logging: true
-
-webauthn:
-  enabled: false
-  rpid: "localhost"
 
 advanced:
   log_level: info
@@ -35,3 +33,6 @@ database:
 auth:
   # Default minimum is 16; the admin password above satisfies it.
   min_password_length: 16
+  webauthn:
+    enabled: false
+    rpid: "${WG_EXTERNAL_HOST}"

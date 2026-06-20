@@ -23,6 +23,9 @@ services:
     restart: unless-stopped
     environment:
       <<: *wg-credentials
+      WG_WEB_HOST: ${WG_WEB_HOST}
+      WG_EXTERNAL_HOST: ${WG_EXTERNAL_HOST}
+      WG_WEB_PORT: ${WG_WEB_PORT}
     cap_add:
       - NET_ADMIN
     sysctls:

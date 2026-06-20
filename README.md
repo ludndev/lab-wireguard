@@ -134,9 +134,14 @@ Key configuration variables:
 
 * `WG_ADMIN_USER` / `WG_ADMIN_PASSWORD` — web UI and REST API credentials
 * `WG_API_TOKEN` — enables the REST API (`/api/v1/*` endpoints)
-* `WG_WEB_HOST` — bind address for web UI (default: `127.0.0.1`)
+* `WG_WEB_HOST` — socket bind address (`0.0.0.0` = all interfaces, `127.0.0.1` = localhost only)
+* `WG_EXTERNAL_HOST` — public hostname or IP used in the web UI URL and WebAuthn RPID
 * `WG_WEB_PORT` / `WG_VPN_PORT` — port mappings
 * `WG_TEST_ENDPOINT` — how the test peer reaches the server
+
+> `WG_WEB_HOST` and `WG_EXTERNAL_HOST` are intentionally separate: `WG_WEB_HOST` controls what address
+> the container binds to, while `WG_EXTERNAL_HOST` is what users put in their browser.
+> For LAN access set `WG_WEB_HOST=0.0.0.0` and `WG_EXTERNAL_HOST=<your server IP or hostname>`.
 
 All variables are required and must be set in `.env` before running.
 
