@@ -15,7 +15,10 @@ wg-portal-stack/
 ├── test/                   # automated end-to-end VPN test
 └── lib/
     ├── v1_swagger.yaml     # wg-portal REST API v1 OpenAPI spec
-    └── typescript/         # TypeScript client library
+    ├── typescript/         # TypeScript client library (Node ≥ 18, native fetch)
+    ├── python/             # Python client library (Python ≥ 3.9, httpx)
+    ├── php/                # PHP client library (PHP ≥ 8.1, Guzzle 7)
+    └── rust/               # Rust client library (reqwest, serde)
 ```
 
 ## Configuration
