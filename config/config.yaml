@@ -19,6 +19,7 @@ web:
 
 webauthn:
   enabled: false
+  rpid: "localhost"
 
 advanced:
   log_level: info
