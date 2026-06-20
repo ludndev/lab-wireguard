@@ -17,6 +17,9 @@ web:
   external_url: "http://${WG_WEB_HOST}:${WG_WEB_PORT}"
   request_logging: true
 
+webauthn:
+  enabled: false
+
 advanced:
   log_level: info
   # Defaults used by /interface/prepare when generating a fresh interface.
