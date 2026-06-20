@@ -80,6 +80,26 @@ The client is organized into five namespaces matching the API groups.
 | `byPeer(peerId)` | Get traffic metrics for a peer |
 | `byUser(userId)` | Get traffic metrics for a user |
 
+## Examples
+
+Runnable examples are in [`examples/`](./examples/). Each file is self-contained and documents its use case at the top.
+
+| File | Use case |
+|------|----------|
+| [`01-provision-peer.ts`](./examples/01-provision-peer.ts) | Create a peer for a user, write the `.conf` file and QR code to disk |
+| [`02-offboard-user.ts`](./examples/02-offboard-user.ts) | Delete all peers for a user, then delete the user account |
+| [`03-dashboard-metrics.ts`](./examples/03-dashboard-metrics.ts) | Pull live traffic metrics for every interface and peer |
+| [`04-bulk-create-users.ts`](./examples/04-bulk-create-users.ts) | Import a list of users, create accounts, and provision one peer each |
+| [`05-rotate-peer-key.ts`](./examples/05-rotate-peer-key.ts) | Replace a peer with a fresh one (key rotation or compromise response) |
+| [`06-disable-inactive-peers.ts`](./examples/06-disable-inactive-peers.ts) | Disable peers with no handshake in the last N days (hygiene cron) |
+| [`07-self-service-portal.ts`](./examples/07-self-service-portal.ts) | Backend route: user fetches their own peer list and config by email |
+
+Run any example with:
+
+```bash
+WG_API_TOKEN=your-token npx ts-node examples/01-provision-peer.ts
+```
+
 ## Error handling
 
 All methods throw `WgPortalError` on non-2xx responses:
