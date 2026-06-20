@@ -8,9 +8,8 @@ core:
   # Setting an API token enables the REST API for the admin user.
   # API auth is HTTP Basic: username = admin_user, password = this token.
   admin_api_token: ${WG_API_TOKEN}
-  # Nothing to import on a fresh stack; keeps startup deterministic for the test.
   import_existing: false
-  restore_state: false
+  restore_state: true
 
 web:
   # WG_WEB_HOST is the bind address (0.0.0.0 to listen on all interfaces).
