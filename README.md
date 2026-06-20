@@ -11,10 +11,11 @@ wg-portal-stack/
 ├── .gitignore              # ignore .env, data/, and other sensitive files
 ├── .env.example            # configuration template (committed to git)
 ├── docker-compose.yml      # wg-portal + (profiled) wg-test
-├── config/
-│   └── config.yaml         # wg-portal configuration
-└── test/
-    └── run-test.sh         # automated end-to-end VPN test
+├── config/                 # wg-portal configuration
+├── test/                   # automated end-to-end VPN test
+└── lib/
+    ├── v1_swagger.yaml     # wg-portal REST API v1 OpenAPI spec
+    └── typescript/         # TypeScript client library
 ```
 
 ## Configuration
