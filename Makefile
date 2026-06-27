@@ -37,13 +37,11 @@ env-check: env ## Verify .env file is configured
 		echo "$(YELLOW)⚠ WARNING: Using default admin password. Change WG_ADMIN_PASSWORD before production use.$(RESET)"; \
 	fi
 
-seed: env-check ## Provision wg0 (system) and wg1 (backoffice) interfaces via the API
-	@echo "$(GREEN)Seeding wg0 and wg1 interfaces...$(RESET)"
-	WG_PORTAL_URL="http://$$(grep WG_EXTERNAL_HOST .env | cut -d= -f2):$$(grep WG_WEB_PORT .env | cut -d= -f2)" \
-	WG_ADMIN_USER="$$(grep WG_ADMIN_USER .env | cut -d= -f2)" \
-	WG_API_TOKEN="$$(grep WG_API_TOKEN .env | cut -d= -f2)" \
-	WG_EXTERNAL_HOST="$$(grep WG_EXTERNAL_HOST .env | cut -d= -f2)" \
-	./scripts/seed-interfaces.sh
+seed: env-check ## Re-seed wg0/wg1 interfaces manually (wg-seeder sidecar does this on every up)
+	@echo "$(GREEN)Re-seeding wg0 and wg1 interfaces...$(RESET)"
+	docker compose run --rm \
+	  -e WG_PORTAL_URL="http://$$(grep WG_EXTERNAL_HOST .env | cut -d= -f2):$$(grep WG_WEB_PORT .env | cut -d= -f2)" \
+	  wg-seeder
 
 up: env-check ## Start the WireGuard stack (portal only, no test)
 	@echo "$(GREEN)Starting wg-portal...$(RESET)"
