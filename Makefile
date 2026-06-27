@@ -1,4 +1,4 @@
-.PHONY: help up down logs test restart clean env-check env
+.PHONY: help up down logs test restart clean env-check env seed
 .DEFAULT_GOAL := help
 
 # Load .env file
@@ -36,6 +36,14 @@ env-check: env ## Verify .env file is configured
 	@if grep -q "Sup3rSecret-Admin-Pw" .env; then \
 		echo "$(YELLOW)⚠ WARNING: Using default admin password. Change WG_ADMIN_PASSWORD before production use.$(RESET)"; \
 	fi
+
+seed: env-check ## Provision wg0 (system) and wg1 (backoffice) interfaces via the API
+	@echo "$(GREEN)Seeding wg0 and wg1 interfaces...$(RESET)"
+	WG_PORTAL_URL="http://$$(grep WG_EXTERNAL_HOST .env | cut -d= -f2):$$(grep WG_WEB_PORT .env | cut -d= -f2)" \
+	WG_ADMIN_USER="$$(grep WG_ADMIN_USER .env | cut -d= -f2)" \
+	WG_API_TOKEN="$$(grep WG_API_TOKEN .env | cut -d= -f2)" \
+	WG_EXTERNAL_HOST="$$(grep WG_EXTERNAL_HOST .env | cut -d= -f2)" \
+	./scripts/seed-interfaces.sh
 
 up: env-check ## Start the WireGuard stack (portal only, no test)
 	@echo "$(GREEN)Starting wg-portal...$(RESET)"
@@ -101,4 +109,4 @@ ui: ## Open wg-portal web UI in default browser
 	echo "Opening http://$$host:$$port"; \
 	open "http://$$host:$$port" 2>/dev/null || echo "Please open http://$$host:$$port in your browser"
 
-.PHONY: help up down logs test restart clean env-check env shell-portal shell-test ps health config version status ui down-clean logs-portal logs-test up-test
+.PHONY: help up down logs test restart clean env-check env seed shell-portal shell-test ps health config version status ui down-clean logs-portal logs-test up-test
