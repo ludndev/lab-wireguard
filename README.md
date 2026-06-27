@@ -10,14 +10,14 @@ wg-portal-stack/
 ├── Makefile                # convenient commands (make help)
 ├── .gitignore              # ignore .env, data/, and other sensitive files
 ├── .env.example            # configuration template (committed to git)
-├── docker-compose.yml      # wg-portal + (profiled) wg-test
+├── docker-compose.yml      # wg-portal + wg-seeder + (profiled) wg-test
 ├── config/
 │   ├── config.yaml         # wg-portal runtime configuration
 │   └── interfaces/
 │       ├── wg0.json        # system network LAN config     (10.10.0.0/24, UDP 51820)
 │       └── wg1.json        # backoffice network LAN config (10.20.0.0/24, UDP 51821)
 ├── scripts/
-│   └── seed-interfaces.sh  # bootstrap wg0 and wg1 via the REST API
+│   └── seed-interfaces.sh  # bootstrap wg0 and wg1 via the REST API (run by wg-seeder)
 ├── test/                   # automated end-to-end VPN test
 └── lib/
     ├── v1_swagger.yaml     # wg-portal REST API v1 OpenAPI spec
@@ -56,28 +56,26 @@ Two WireGuard server interfaces are pre-defined in `config/interfaces/`:
 | `wg0`     | system     | 10.10.0.1   | 10.10.0.0/24  | 51820    |
 | `wg1`     | backoffice | 10.20.0.1   | 10.20.0.0/24  | 51821    |
 
-After starting the portal, provision both interfaces with:
+Both interfaces are provisioned **automatically** on every `make up` by the
+`wg-seeder` sidecar container.  The start-up order is enforced by Compose
+dependency conditions:
+
+```
+wg-portal (healthy) → wg-seeder (completed_successfully) → wg-test (test profile)
+```
+
+The script is **idempotent** — HTTP 409 (already exists) is treated as a no-op,
+so restarting the stack never fails because the interfaces are already there.
+
+To re-seed manually (e.g. after editing a `config/interfaces/` file):
 
 ```bash
 make seed
 ```
 
-Or directly:
-
-```bash
-WG_PORTAL_URL=http://localhost:8888 \
-WG_ADMIN_USER=admin@wgportal.local  \
-WG_API_TOKEN=<token>                \
-WG_EXTERNAL_HOST=<your-server-ip>   \
-./scripts/seed-interfaces.sh
-```
-
-The script is **idempotent** — running it again when the interfaces already exist
-is a no-op (HTTP 409 is silently skipped).
-
 To use different CIDRs or ports, edit `WG_WG0_CIDR`, `WG_WG1_CIDR`,
 `WG_WG0_PORT` and `WG_WG1_PORT` in your `.env`, then update the matching
-`config/interfaces/wg{0,1}.json` files and re-run `make seed`.
+`config/interfaces/wg{0,1}.json` files and run `make seed`.
 
 ## Run the portal
 
@@ -143,9 +141,9 @@ All commands load configuration from `.env` automatically:
 |---------|---------|
 | `make help` | Show all available commands |
 | `make env-create` | Create `.env` from `.env.example` (skips if exists) |
-| `make up` | Start wg-portal (portal only) |
-| `make seed` | Provision wg0 (system) and wg1 (backoffice) interfaces |
-| `make up-test` | Start wg-portal with automated test |
+| `make up` | Start wg-portal + wg-seeder (interfaces seeded automatically) |
+| `make seed` | Re-seed wg0/wg1 manually via docker compose run |
+| `make up-test` | Start wg-portal + wg-seeder + automated test |
 | `make down` | Stop all containers |
 | `make down-clean` | Stop containers and remove volumes |
 | `make logs` | Show logs from all containers |
