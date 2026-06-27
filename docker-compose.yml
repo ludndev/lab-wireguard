@@ -16,7 +16,12 @@ x-wg-credentials: &wg-credentials
   WG_ADMIN_PASSWORD: ${WG_ADMIN_PASSWORD}
   WG_API_TOKEN: ${WG_API_TOKEN}
 
-x-wg-lanconfig: &wg-lanconfig
+# Full environment block for wg-portal: credentials + LAN interface config.
+# Kept as a separate anchor so wg-test can still reference only *wg-credentials.
+x-wg-portal-env: &wg-portal-env
+  WG_ADMIN_USER: ${WG_ADMIN_USER}
+  WG_ADMIN_PASSWORD: ${WG_ADMIN_PASSWORD}
+  WG_API_TOKEN: ${WG_API_TOKEN}
   WG_WG0_PORT: ${WG_WG0_PORT:-51820}
   WG_WG1_PORT: ${WG_WG1_PORT:-51821}
   WG_WG0_CIDR: ${WG_WG0_CIDR:-10.10.0.0/24}
@@ -28,8 +33,7 @@ services:
     container_name: ${WG_PORTAL_CONTAINER}
     restart: unless-stopped
     environment:
-      <<: *wg-credentials
-      <<: *wg-lanconfig
+      <<: *wg-portal-env
       WG_WEB_HOST: ${WG_WEB_HOST}
       WG_EXTERNAL_HOST: ${WG_EXTERNAL_HOST}
       WG_WEB_PORT: ${WG_WEB_PORT}
