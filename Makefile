@@ -1,4 +1,4 @@
-.PHONY: help up down logs test restart clean env-check env
+.PHONY: help up down logs test restart clean env-check env seed
 .DEFAULT_GOAL := help
 
 # Load .env file
@@ -36,6 +36,12 @@ env-check: env ## Verify .env file is configured
 	@if grep -q "Sup3rSecret-Admin-Pw" .env; then \
 		echo "$(YELLOW)⚠ WARNING: Using default admin password. Change WG_ADMIN_PASSWORD before production use.$(RESET)"; \
 	fi
+
+seed: env-check ## Re-seed wg0/wg1 interfaces manually (wg-seeder sidecar does this on every up)
+	@echo "$(GREEN)Re-seeding wg0 and wg1 interfaces...$(RESET)"
+	docker compose run --rm \
+	  -e WG_PORTAL_URL="http://$$(grep WG_EXTERNAL_HOST .env | cut -d= -f2):$$(grep WG_WEB_PORT .env | cut -d= -f2)" \
+	  wg-seeder
 
 up: env-check ## Start the WireGuard stack (portal only, no test)
 	@echo "$(GREEN)Starting wg-portal...$(RESET)"
@@ -101,4 +107,4 @@ ui: ## Open wg-portal web UI in default browser
 	echo "Opening http://$$host:$$port"; \
 	open "http://$$host:$$port" 2>/dev/null || echo "Please open http://$$host:$$port in your browser"
 
-.PHONY: help up down logs test restart clean env-check env shell-portal shell-test ps health config version status ui down-clean logs-portal logs-test up-test
+.PHONY: help up down logs test restart clean env-check env seed shell-portal shell-test ps health config version status ui down-clean logs-portal logs-test up-test

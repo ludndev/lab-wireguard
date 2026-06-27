@@ -1,0 +1,12 @@
+{
+  "Identifier": "wg0",
+  "DisplayName": "system",
+  "Mode": "server",
+  "ListenPort": 51820,
+  "Addresses": ["10.10.0.1/24"],
+  "PeerDefNetwork": ["10.10.0.0/24"],
+  "PeerDefAllowedIPs": ["10.10.0.0/24"],
+  "PeerDefEndpoint": "EXTERNAL_HOST:51820",
+  "Disabled": false,
+  "SaveConfig": false
+}
