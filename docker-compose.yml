@@ -16,6 +16,12 @@ x-wg-credentials: &wg-credentials
   WG_ADMIN_PASSWORD: ${WG_ADMIN_PASSWORD}
   WG_API_TOKEN: ${WG_API_TOKEN}
 
+x-wg-lanconfig: &wg-lanconfig
+  WG_WG0_PORT: ${WG_WG0_PORT:-51820}
+  WG_WG1_PORT: ${WG_WG1_PORT:-51821}
+  WG_WG0_CIDR: ${WG_WG0_CIDR:-10.10.0.0/24}
+  WG_WG1_CIDR: ${WG_WG1_CIDR:-10.20.0.0/24}
+
 services:
   wg-portal:
     image: wgportal/wg-portal:v2
@@ -23,6 +29,7 @@ services:
     restart: unless-stopped
     environment:
       <<: *wg-credentials
+      <<: *wg-lanconfig
       WG_WEB_HOST: ${WG_WEB_HOST}
       WG_EXTERNAL_HOST: ${WG_EXTERNAL_HOST}
       WG_WEB_PORT: ${WG_WEB_PORT}
@@ -34,8 +41,9 @@ services:
     devices:
       - /dev/net/tun:/dev/net/tun
     ports:
-      - "${WG_WEB_HOST}:${WG_WEB_PORT}:8888/tcp"      # web UI
-      - "${WG_VPN_PORT}:51820/udp"    # WireGuard interface (must match ListenPort below)
+      - "${WG_WEB_HOST}:${WG_WEB_PORT}:8888/tcp"         # web UI
+      - "${WG_WG0_PORT:-51820}:51820/udp"                 # wg0 – system
+      - "${WG_WG1_PORT:-51821}:51821/udp"                 # wg1 – backoffice
     volumes:
       - ./config:/app/config        # config.yaml lives here
       - ./data:/app/data            # sqlite db + state
