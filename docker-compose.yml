@@ -5,9 +5,12 @@
 #   Automated test (portal+test): docker compose --profile test up \
 #                                     --abort-on-container-exit --exit-code-from wg-test
 #
-# The "wg-test" container provisions a peer through the wg-portal REST API,
-# establishes a real WireGuard tunnel and pings the server over it.
-# It only runs when the "test" profile is enabled.
+# Start-up order:
+#   wg-portal (healthy) → wg-seeder (seeds wg0+wg1, then exits) → wg-test (test profile only)
+#
+# wg-seeder runs on every "up" (no profile restriction) so interfaces are always
+# provisioned automatically.  wg-test waits for wg-seeder to complete successfully
+# before running, so the interfaces exist before any peer is provisioned.
 
 # Credentials are loaded from .env and injected both into wg-portal (the config
 # file uses ${...} substitution) and into the test container (for API auth).
@@ -16,13 +19,24 @@ x-wg-credentials: &wg-credentials
   WG_ADMIN_PASSWORD: ${WG_ADMIN_PASSWORD}
   WG_API_TOKEN: ${WG_API_TOKEN}
 
+# Full environment block for wg-portal: credentials + LAN interface config.
+# Kept as a separate anchor so wg-test can still reference only *wg-credentials.
+x-wg-portal-env: &wg-portal-env
+  WG_ADMIN_USER: ${WG_ADMIN_USER}
+  WG_ADMIN_PASSWORD: ${WG_ADMIN_PASSWORD}
+  WG_API_TOKEN: ${WG_API_TOKEN}
+  WG_WG0_PORT: ${WG_WG0_PORT:-51820}
+  WG_WG1_PORT: ${WG_WG1_PORT:-51821}
+  WG_WG0_CIDR: ${WG_WG0_CIDR:-10.10.0.0/24}
+  WG_WG1_CIDR: ${WG_WG1_CIDR:-10.20.0.0/24}
+
 services:
   wg-portal:
     image: wgportal/wg-portal:v2
     container_name: ${WG_PORTAL_CONTAINER}
     restart: unless-stopped
     environment:
-      <<: *wg-credentials
+      <<: *wg-portal-env
       WG_WEB_HOST: ${WG_WEB_HOST}
       WG_EXTERNAL_HOST: ${WG_EXTERNAL_HOST}
       WG_WEB_PORT: ${WG_WEB_PORT}
@@ -34,8 +48,9 @@ services:
     devices:
       - /dev/net/tun:/dev/net/tun
     ports:
-      - "${WG_WEB_HOST}:${WG_WEB_PORT}:8888/tcp"      # web UI
-      - "${WG_VPN_PORT}:51820/udp"    # WireGuard interface (must match ListenPort below)
+      - "${WG_WEB_HOST}:${WG_WEB_PORT}:8888/tcp"         # web UI
+      - "${WG_WG0_PORT:-51820}:51820/udp"                 # wg0 – system
+      - "${WG_WG1_PORT:-51821}:51821/udp"                 # wg1 – backoffice
     volumes:
       - ./config:/app/config        # config.yaml lives here
       - ./data:/app/data            # sqlite db + state
@@ -53,13 +68,42 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  wg-seeder:
+    image: alpine:3.20
+    container_name: ${WG_SEEDER_CONTAINER:-wg-seeder}
+    restart: "no"
+    depends_on:
+      wg-portal:
+        condition: service_healthy
+    environment:
+      WG_PORTAL_URL: "http://${WG_PORTAL_CONTAINER}:8888"
+      WG_ADMIN_USER: ${WG_ADMIN_USER}
+      WG_API_TOKEN: ${WG_API_TOKEN}
+      WG_EXTERNAL_HOST: ${WG_EXTERNAL_HOST}
+    volumes:
+      - ./scripts:/scripts:ro
+      - ./config/interfaces:/config/interfaces:ro
+    networks:
+      - wgnet
+    command:
+      - /bin/sh
+      - -c
+      - |
+        apk add --no-cache curl jq >/dev/null 2>&1
+        exec /bin/sh /scripts/seed-interfaces.sh
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   wg-test:
     image: alpine:3.20
     container_name: ${WG_TEST_CONTAINER}
     profiles: ["test"]          # only started with: --profile test
     restart: "no"
     depends_on:
-      - wg-portal
+      wg-seeder:
+        condition: service_completed_successfully
     environment:
       <<: *wg-credentials
       WG_PORTAL_URL: "http://${WG_PORTAL_CONTAINER}:8888"

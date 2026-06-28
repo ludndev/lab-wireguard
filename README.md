@@ -10,8 +10,14 @@ wg-portal-stack/
 ├── Makefile                # convenient commands (make help)
 ├── .gitignore              # ignore .env, data/, and other sensitive files
 ├── .env.example            # configuration template (committed to git)
-├── docker-compose.yml      # wg-portal + (profiled) wg-test
-├── config/                 # wg-portal configuration
+├── docker-compose.yml      # wg-portal + wg-seeder + (profiled) wg-test
+├── config/
+│   ├── config.yaml         # wg-portal runtime configuration
+│   └── interfaces/
+│       ├── wg0.json        # system network LAN config     (10.10.0.0/24, UDP 51820)
+│       └── wg1.json        # backoffice network LAN config (10.20.0.0/24, UDP 51821)
+├── scripts/
+│   └── seed-interfaces.sh  # bootstrap wg0 and wg1 via the REST API (run by wg-seeder)
 ├── test/                   # automated end-to-end VPN test
 └── lib/
     ├── v1_swagger.yaml     # wg-portal REST API v1 OpenAPI spec
@@ -40,6 +46,36 @@ cp .env.example .env
 `WG_ADMIN_PASSWORD` and `WG_API_TOKEN` before any real deployment.
 
 **`.env` is in `.gitignore`** — only `.env.example` is committed to version control.
+
+## LAN interfaces: wg0 (system) and wg1 (backoffice)
+
+Two WireGuard server interfaces are pre-defined in `config/interfaces/`:
+
+| Interface | Role       | Server IP   | LAN CIDR      | UDP port |
+|-----------|------------|-------------|---------------|----------|
+| `wg0`     | system     | 10.10.0.1   | 10.10.0.0/24  | 51820    |
+| `wg1`     | backoffice | 10.20.0.1   | 10.20.0.0/24  | 51821    |
+
+Both interfaces are provisioned **automatically** on every `make up` by the
+`wg-seeder` sidecar container.  The start-up order is enforced by Compose
+dependency conditions:
+
+```
+wg-portal (healthy) → wg-seeder (completed_successfully) → wg-test (test profile)
+```
+
+The script is **idempotent** — HTTP 409 (already exists) is treated as a no-op,
+so restarting the stack never fails because the interfaces are already there.
+
+To re-seed manually (e.g. after editing a `config/interfaces/` file):
+
+```bash
+make seed
+```
+
+To use different CIDRs or ports, edit `WG_WG0_CIDR`, `WG_WG1_CIDR`,
+`WG_WG0_PORT` and `WG_WG1_PORT` in your `.env`, then update the matching
+`config/interfaces/wg{0,1}.json` files and run `make seed`.
 
 ## Run the portal
 
@@ -105,8 +141,9 @@ All commands load configuration from `.env` automatically:
 |---------|---------|
 | `make help` | Show all available commands |
 | `make env-create` | Create `.env` from `.env.example` (skips if exists) |
-| `make up` | Start wg-portal (portal only) |
-| `make up-test` | Start wg-portal with automated test |
+| `make up` | Start wg-portal + wg-seeder (interfaces seeded automatically) |
+| `make seed` | Re-seed wg0/wg1 manually via docker compose run |
+| `make up-test` | Start wg-portal + wg-seeder + automated test |
 | `make down` | Stop all containers |
 | `make down-clean` | Stop containers and remove volumes |
 | `make logs` | Show logs from all containers |
@@ -140,7 +177,9 @@ Key configuration variables:
 * `WG_API_TOKEN` — enables the REST API (`/api/v1/*` endpoints)
 * `WG_WEB_HOST` — socket bind address (`0.0.0.0` = all interfaces, `127.0.0.1` = localhost only)
 * `WG_EXTERNAL_HOST` — public hostname or IP used in the web UI URL and WebAuthn RPID
-* `WG_WEB_PORT` / `WG_VPN_PORT` — port mappings
+* `WG_WEB_PORT` — web UI port mapping
+* `WG_WG0_PORT` / `WG_WG1_PORT` — UDP port mappings for wg0 and wg1 (default 51820 / 51821)
+* `WG_WG0_CIDR` / `WG_WG1_CIDR` — LAN CIDRs for wg0 and wg1 (default 10.10.0.0/24 / 10.20.0.0/24)
 * `WG_TEST_ENDPOINT` — how the test peer reaches the server
 
 > `WG_WEB_HOST` and `WG_EXTERNAL_HOST` are intentionally separate: `WG_WEB_HOST` controls what address

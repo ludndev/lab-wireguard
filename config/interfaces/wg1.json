@@ -1,0 +1,12 @@
+{
+  "Identifier": "wg1",
+  "DisplayName": "backoffice",
+  "Mode": "server",
+  "ListenPort": 51821,
+  "Addresses": ["10.20.0.1/24"],
+  "PeerDefNetwork": ["10.20.0.0/24"],
+  "PeerDefAllowedIPs": ["10.20.0.0/24"],
+  "PeerDefEndpoint": "EXTERNAL_HOST:51821",
+  "Disabled": false,
+  "SaveConfig": false
+}
